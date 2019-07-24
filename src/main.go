@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"responses"
+	"strings"
 )
 
 const (
@@ -23,7 +25,7 @@ func main() {
 	// Close the listener when the application closes.
 	defer l.Close()
 
-	fmt.Println("Listening on " + host + ":" + port)
+	fmt.Println(fmt.Sprintf("Listening on: %s:%s", host, port))
 	for {
 		// Listen for an incoming connection.
 		conn, err := l.Accept()
@@ -45,8 +47,17 @@ func handleRequest(conn net.Conn) {
 	if err != nil {
 		fmt.Println("Error reading:", err.Error())
 	}
+
+	request := string(buf)
+	tokens := strings.Split(request, " ")
+	verb := tokens[0]
+
 	// Send a response back to person contacting us.
-	conn.Write([]byte("HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!"))
-	// Close the connection when you're done with it.
+	if verb == "GET" {
+		conn.Write([]byte(responses.Success))
+	} else {
+		conn.Write([]byte(responses.InvalidHttpMethod))
+	}
+
 	conn.Close()
 }
