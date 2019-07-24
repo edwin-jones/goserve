@@ -72,10 +72,7 @@ func handleRequest(conn net.Conn) {
 	}
 
 	if strings.HasSuffix(url, "html") || strings.HasSuffix(url, "htm") {
-		fileBytes := getFileBytes(url)
-		response := responses.SuccessHtmlPrefix + fmt.Sprint(len(fileBytes)) + "\n\n"
-		responseBytes := append([]byte(response), fileBytes...)
-		conn.Write(responseBytes)
+		conn.Write(getSuccessResponseBytes(url))
 	} else {
 		conn.Write([]byte(responses.UnsupportedMediaType))
 	}
@@ -112,4 +109,12 @@ func getFileBytes(fileName string) []byte {
 	}
 
 	return fileBytes
+}
+
+func getSuccessResponseBytes(url string) []byte {
+	fileBytes := getFileBytes(url)
+	response := responses.SuccessHtmlPrefix + fmt.Sprint(len(fileBytes)) + "\n\n"
+	responseBytes := append([]byte(response), fileBytes...)
+
+	return responseBytes
 }
