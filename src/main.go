@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 	"responses"
@@ -40,8 +41,10 @@ func main() {
 
 // Handles incoming requests.
 func handleRequest(conn net.Conn) {
+
 	// Make a buffer to hold incoming data.
 	buf := make([]byte, 1024)
+
 	// Read the incoming connection into the buffer.
 	_, err := conn.Read(buf)
 	if err != nil {
@@ -53,11 +56,43 @@ func handleRequest(conn net.Conn) {
 	verb := tokens[0]
 
 	// Send a response back to person contacting us.
-	if verb == "GET" {
-		conn.Write([]byte(responses.Success))
-	} else {
+	if verb != "GET" {
 		conn.Write([]byte(responses.InvalidHttpMethod))
+	} else {
+
+		url := tokens[1][1:]
+		files := getDirectoryFileNames()
+
+		if stringInSlice(url, files) {
+			conn.Write([]byte(responses.Success))
+		} else {
+			conn.Write([]byte(responses.NotFound))
+		}
 	}
 
 	conn.Close()
+}
+
+func getDirectoryFileNames() []string {
+	files, err := ioutil.ReadDir("./")
+
+	if err != nil {
+		panic(err)
+	}
+
+	var results []string
+	for _, f := range files {
+		results = append(results, f.Name())
+	}
+
+	return results
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
