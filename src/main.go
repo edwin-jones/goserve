@@ -42,8 +42,11 @@ func main() {
 // Handles incoming requests.
 func handleRequest(conn net.Conn) {
 
+	fmt.Println("Opening connection")
+	
 	// Close the connection last
 	defer conn.Close()
+	defer fmt.Println("Closing connection")
 
 	// Make a buffer to hold incoming data.
 	buf := make([]byte, 1024)
