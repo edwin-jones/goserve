@@ -64,7 +64,10 @@ func handleRequest(conn net.Conn) {
 		files := getDirectoryFileNames()
 
 		if stringInSlice(url, files) {
-			conn.Write([]byte(responses.Success))
+			fileBytes := getFileBytes(url)
+			response := "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + fmt.Sprint(len(fileBytes)) + "\n\n"
+			responseBytes := append([]byte(response), fileBytes...)
+			conn.Write(responseBytes)
 		} else {
 			conn.Write([]byte(responses.NotFound))
 		}
@@ -95,4 +98,13 @@ func stringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
+}
+
+func getFileBytes(fileName string) []byte {
+	fileBytes, err := ioutil.ReadFile(fileName) // just pass the file name
+	if err != nil {
+		panic(err)
+	}
+
+	return fileBytes
 }

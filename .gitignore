@@ -11,3 +11,6 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 *.a
+pkg/windows_amd64/responses.a
+src/__debug_bin
+pkg/windows_amd64/responses.a
