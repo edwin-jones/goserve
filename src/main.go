@@ -64,10 +64,16 @@ func handleRequest(conn net.Conn) {
 		files := getDirectoryFileNames()
 
 		if stringInSlice(url, files) {
-			fileBytes := getFileBytes(url)
-			response := "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + fmt.Sprint(len(fileBytes)) + "\n\n"
-			responseBytes := append([]byte(response), fileBytes...)
-			conn.Write(responseBytes)
+
+			if strings.HasSuffix(url, "html") || strings.HasSuffix(url, "htm") {
+
+				fileBytes := getFileBytes(url)
+				response := responses.SuccessHtmlPrefix + fmt.Sprint(len(fileBytes)) + "\n\n"
+				responseBytes := append([]byte(response), fileBytes...)
+				conn.Write(responseBytes)
+			} else {
+				conn.Write([]byte(responses.UnsupportedMediaType))
+			}
 		} else {
 			conn.Write([]byte(responses.NotFound))
 		}
