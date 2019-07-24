@@ -42,6 +42,9 @@ func main() {
 // Handles incoming requests.
 func handleRequest(conn net.Conn) {
 
+	// Close the connection last
+	defer conn.Close()
+
 	// Make a buffer to hold incoming data.
 	buf := make([]byte, 1024)
 
@@ -55,31 +58,27 @@ func handleRequest(conn net.Conn) {
 	tokens := strings.Split(request, " ")
 	verb := tokens[0]
 
-	// Send a response back to person contacting us.
 	if verb != "GET" {
 		conn.Write([]byte(responses.InvalidHttpMethod))
-	} else {
-
-		url := tokens[1][1:]
-		files := getDirectoryFileNames()
-
-		if stringInSlice(url, files) {
-
-			if strings.HasSuffix(url, "html") || strings.HasSuffix(url, "htm") {
-
-				fileBytes := getFileBytes(url)
-				response := responses.SuccessHtmlPrefix + fmt.Sprint(len(fileBytes)) + "\n\n"
-				responseBytes := append([]byte(response), fileBytes...)
-				conn.Write(responseBytes)
-			} else {
-				conn.Write([]byte(responses.UnsupportedMediaType))
-			}
-		} else {
-			conn.Write([]byte(responses.NotFound))
-		}
+		return
 	}
 
-	conn.Close()
+	url := tokens[1][1:]
+	files := getDirectoryFileNames()
+
+	if !stringInSlice(url, files) {
+		conn.Write([]byte(responses.NotFound))
+		return
+	}
+
+	if strings.HasSuffix(url, "html") || strings.HasSuffix(url, "htm") {
+		fileBytes := getFileBytes(url)
+		response := responses.SuccessHtmlPrefix + fmt.Sprint(len(fileBytes)) + "\n\n"
+		responseBytes := append([]byte(response), fileBytes...)
+		conn.Write(responseBytes)
+	} else {
+		conn.Write([]byte(responses.UnsupportedMediaType))
+	}
 }
 
 func getDirectoryFileNames() []string {
