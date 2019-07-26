@@ -43,7 +43,7 @@ func main() {
 func handleRequest(conn net.Conn) {
 
 	fmt.Println("Opening connection")
-	
+
 	// Close the connection last
 	defer conn.Close()
 	defer fmt.Println("Closing connection")
@@ -67,9 +67,8 @@ func handleRequest(conn net.Conn) {
 	}
 
 	url := tokens[1][1:]
-	files := getDirectoryFileNames()
 
-	if !stringInSlice(url, files) {
+	if _, fileError := os.Stat(url); os.IsNotExist(fileError) {
 		conn.Write([]byte(responses.NotFound))
 		return
 	}
@@ -94,15 +93,6 @@ func getDirectoryFileNames() []string {
 	}
 
 	return results
-}
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
 }
 
 func getFileBytes(fileName string) []byte {
