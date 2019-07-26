@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
-	"responses"
 	"strings"
 )
 
@@ -62,21 +61,21 @@ func handleRequest(conn net.Conn) {
 	verb := tokens[0]
 
 	if verb != "GET" {
-		conn.Write([]byte(responses.InvalidHttpMethod))
+		conn.Write([]byte(invalidHttpMethod))
 		return
 	}
 
 	url := tokens[1][1:]
 
 	if _, fileError := os.Stat(url); os.IsNotExist(fileError) {
-		conn.Write([]byte(responses.NotFound))
+		conn.Write([]byte(notFound))
 		return
 	}
 
 	if strings.HasSuffix(url, "html") || strings.HasSuffix(url, "htm") {
 		conn.Write(getSuccessResponseBytes(url))
 	} else {
-		conn.Write([]byte(responses.UnsupportedMediaType))
+		conn.Write([]byte(unsupportedMediaType))
 	}
 }
 
@@ -106,7 +105,7 @@ func getFileBytes(fileName string) []byte {
 
 func getSuccessResponseBytes(url string) []byte {
 	fileBytes := getFileBytes(url)
-	response := responses.SuccessHtmlPrefix + fmt.Sprint(len(fileBytes)) + "\n\n"
+	response := successHtmlPrefix + fmt.Sprint(len(fileBytes)) + "\n\n"
 	responseBytes := append([]byte(response), fileBytes...)
 
 	return responseBytes
