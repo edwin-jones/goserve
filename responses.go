@@ -7,8 +7,19 @@ import (
 )
 
 const (
-	successHTMLPrefix = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: "
+	successHTMLTemplate = "HTTP/1.1 200 OK\nContent-Type: %s\nContent-Length: %d\n\n"
 )
+
+var mimeTypeMap = map[string]string{
+	"html": "text/html",
+	"htm":  "text/html",
+	"css":  "text/css",
+	"jpeg": "image/jpeg",
+	"jpg":  "image/jpeg",
+	"gif":  "image/gif",
+	"png":  "image/png",
+	"js":   "application/javascript",
+}
 
 // BuildSuccessResponse Builds a successful HTTP response from the given request
 func BuildSuccessResponse(request *string) []byte {
@@ -29,7 +40,10 @@ func getFileBytes(fileName string) []byte {
 
 func getSuccessResponseBytes(url string) []byte {
 	fileBytes := getFileBytes(url)
-	response := successHTMLPrefix + fmt.Sprint(len(fileBytes)) + "\n\n"
+	tokens := strings.Split(url, ".")
+	fileType := tokens[len(tokens)-1]
+	mimeType := mimeTypeMap[fileType]
+	response := fmt.Sprintf(successHTMLTemplate, mimeType, len(fileBytes))
 	responseBytes := append([]byte(response), fileBytes...)
 
 	return responseBytes

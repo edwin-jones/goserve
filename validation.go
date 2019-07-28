@@ -11,7 +11,7 @@ const (
 	unsupportedMediaType = "HTTP/1.1 415 Unsupported Media Type\nContent-Type: text/plain\nContent-Length: 26\n\n415 Unsupported Media Type"
 )
 
-var supportedFileTypes = []string{".html", ".htm"}
+var supportedFileTypes = []string{".html", ".htm", ".jpeg", ".jpg", ".png", ".gif", ".js", ".css"}
 
 // ValidateRequest this function returns an error if the supplied http request isn't valid
 func ValidateRequest(rawRequest string) *HTTPRequestError {
