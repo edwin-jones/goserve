@@ -56,7 +56,7 @@ func handleRequest(conn net.Conn) {
 
 	if err := ValidateRequest(request); err != nil {
 		log.Println(err)
-		conn.Write(err.response)
+		conn.Write([]byte(err.response))
 		return
 	}
 

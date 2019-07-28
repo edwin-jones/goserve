@@ -20,19 +20,18 @@ func ValidateRequest(rawRequest string) *HTTPRequestError {
 	verb := tokens[0]
 
 	if verb != "GET" {
-		error := NewHTTPRequestError([]byte(invalidHTTPMethod))
+		error := NewHTTPRequestError(invalidHTTPMethod)
 		return error
 	}
 
 	url := tokens[1][1:]
 
-	if _, fileError := os.Stat(url); os.IsNotExist(fileError) {
-		error := NewHTTPRequestError([]byte(notFound))
-		return error
+	if !isFileTypeSupported(&url) {
+		return NewHTTPRequestError(unsupportedMediaType)
 	}
 
-	if !isFileTypeSupported(&url) {
-		return NewHTTPRequestError([]byte(unsupportedMediaType))
+	if _, fileError := os.Stat(url); os.IsNotExist(fileError) {
+		return NewHTTPRequestError(notFound)
 	}
 
 	return nil
