@@ -1,9 +1,11 @@
 package main
 
+import "github.com/edwin-jones/goserve/server"
+
 const (
 	port = "8080"
 )
 
 func main() {
-	Serve(port)
+	server.Serve(port)
 }

@@ -1,12 +1,13 @@
-package main
+package server
 
 import (
 	"fmt"
+	"github.com/edwin-jones/goserve/responses"
+	"github.com/edwin-jones/goserve/validation"
+	"github.com/google/uuid"
 	"log"
 	"net"
 	"os"
-
-	"github.com/google/uuid"
 )
 
 // Serve start serving on the given port
@@ -54,12 +55,12 @@ func handleRequest(conn net.Conn) {
 
 	request := string(buffer)
 
-	if err := ValidateRequest(request); err != nil {
+	if err := validation.ValidateRequest(request); err != nil {
 		log.Println(err)
-		conn.Write([]byte(err.response))
+		conn.Write([]byte(err.Response))
 		return
 	}
 
 	log.Println("A successful http request has been handled.")
-	conn.Write(BuildSuccessResponse(&request))
+	conn.Write(responses.BuildSuccessResponse(&request))
 }
