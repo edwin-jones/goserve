@@ -1,4 +1,4 @@
-package validation
+package parser
 
 import (
 	"os"
@@ -15,38 +15,42 @@ const (
 
 var supportedFileTypes = []string{".html", ".htm", ".jpeg", ".jpg", ".png", ".gif", ".js", ".css"}
 
-// ValidateRequest this function returns an error if the supplied http request isn't valid
-func ValidateRequest(rawRequest string) *httpRequestError {
+// Parse this function parses an http request to get the URI.
+// Returns an error if the supplied http request isn't valid.
+func Parse(rawRequest string) (string, *RequestError) {
+
+	url := ""
+
 	if len(rawRequest) == 0 {
-		return newHTTPRequestError(badRequest)
+		return url, newRequestError(badRequest)
 	}
 
 	tokens := strings.Split(rawRequest, " ")
 	verb := tokens[0]
 
 	if verb != "GET" {
-		return newHTTPRequestError(invalidHTTPMethod)
+		return url, newRequestError(invalidHTTPMethod)
 	}
 
 	if len(tokens) < 2 {
-		return newHTTPRequestError(badRequest)
+		return url, newRequestError(badRequest)
 	}
 
-	url := tokens[1][1:]
+	url = tokens[1][1:]
 
 	if len(url) > 512 {
-		return newHTTPRequestError(uriTooLong)
+		return url, newRequestError(uriTooLong)
 	}
 
 	if !isFileTypeSupported(&url) {
-		return newHTTPRequestError(unsupportedMediaType)
+		return url, newRequestError(unsupportedMediaType)
 	}
 
 	if _, fileError := os.Stat(url); os.IsNotExist(fileError) {
-		return newHTTPRequestError(notFound)
+		return url, newRequestError(notFound)
 	}
 
-	return nil
+	return url, nil
 }
 
 func isFileTypeSupported(url *string) bool {

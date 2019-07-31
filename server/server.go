@@ -2,8 +2,8 @@ package server
 
 import (
 	"fmt"
+	"github.com/edwin-jones/goserve/parser"
 	"github.com/edwin-jones/goserve/responses"
-	"github.com/edwin-jones/goserve/validation"
 	"github.com/google/uuid"
 	"log"
 	"net"
@@ -55,12 +55,14 @@ func handleRequest(conn net.Conn) {
 
 	request := string(buffer)
 
-	if err := validation.ValidateRequest(request); err != nil {
+	url, err := parser.Parse(request)
+
+	if err != nil {
 		log.Println(err)
 		conn.Write([]byte(err.Response))
 		return
 	}
 
 	log.Println("A successful http request has been handled.")
-	conn.Write(responses.BuildSuccessResponse(&request))
+	conn.Write(responses.Build(url))
 }

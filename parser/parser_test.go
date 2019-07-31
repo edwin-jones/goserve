@@ -1,11 +1,11 @@
-package validation
+package parser
 
 import (
 	"testing"
 )
 
 func TestBlankRequestValidation(t *testing.T) {
-	if err := ValidateRequest(""); err == nil {
+	if _, err := Parse(""); err == nil {
 		t.Error("expected error response")
 	} else {
 		if err.Response != badRequest {
@@ -15,7 +15,7 @@ func TestBlankRequestValidation(t *testing.T) {
 }
 
 func TestIncompleteRequestValidation(t *testing.T) {
-	if err := ValidateRequest("GET foo"); err == nil {
+	if _, err := Parse("GET foo"); err == nil {
 		t.Error("expected error response")
 	} else {
 		if err.Response != badRequest {
@@ -25,7 +25,7 @@ func TestIncompleteRequestValidation(t *testing.T) {
 }
 
 func TestInvalidMethodValidation(t *testing.T) {
-	if err := ValidateRequest("DELETE"); err == nil {
+	if _, err := Parse("DELETE"); err == nil {
 		t.Error("expected error response")
 	} else {
 		if err.Response != invalidHTTPMethod {
@@ -35,7 +35,7 @@ func TestInvalidMethodValidation(t *testing.T) {
 }
 
 func TestUnsupportedFiletypeValidation(t *testing.T) {
-	if err := ValidateRequest("GET http://localhost:8080/test.foo"); err == nil {
+	if _, err := Parse("GET http://localhost:8080/test.foo"); err == nil {
 		t.Error("expected error response")
 	} else {
 		if err.Response != unsupportedMediaType {

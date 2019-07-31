@@ -21,12 +21,17 @@ var mimeTypeMap = map[string]string{
 	"js":   "application/javascript",
 }
 
-// BuildSuccessResponse Builds a successful HTTP response from the given request
-func BuildSuccessResponse(request *string) []byte {
-	tokens := strings.Split(*request, " ")
-	url := tokens[1][1:]
+// Build Builds a successful HTTP response from the given request
+func Build(url string) []byte {
 
-	return getSuccessResponseBytes(url)
+	fileBytes := getFileBytes(url)
+	tokens := strings.Split(url, ".")
+	fileType := tokens[len(tokens)-1]
+	mimeType := mimeTypeMap[fileType]
+	response := fmt.Sprintf(successHTMLTemplate, mimeType, len(fileBytes))
+	responseBytes := append([]byte(response), fileBytes...)
+
+	return responseBytes
 }
 
 func getFileBytes(fileName string) []byte {
@@ -36,15 +41,4 @@ func getFileBytes(fileName string) []byte {
 	}
 
 	return fileBytes
-}
-
-func getSuccessResponseBytes(url string) []byte {
-	fileBytes := getFileBytes(url)
-	tokens := strings.Split(url, ".")
-	fileType := tokens[len(tokens)-1]
-	mimeType := mimeTypeMap[fileType]
-	response := fmt.Sprintf(successHTMLTemplate, mimeType, len(fileBytes))
-	responseBytes := append([]byte(response), fileBytes...)
-
-	return responseBytes
 }
