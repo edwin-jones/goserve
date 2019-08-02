@@ -8,12 +8,12 @@ import (
 )
 
 const (
-	successHTMLTemplate  = "HTTP/1.1 200 OK\nContent-Type: %s\nContent-Length: %d\n\n"
-	badRequest           = "HTTP/1.1 400 Bad Request\nContent-Type: text/plain\nContent-Length: 15\n\n400 Bad Request"
-	notFound             = "HTTP/1.1 404 Not Found\nContent-Type: text/plain\nContent-Length: 13\n\n404 Not Found"
-	invalidHTTPMethod    = "HTTP/1.1 405 Method Not Allowed\nAllow: GET\nContent-Type: text/plain\nContent-Length: 22\n\n405 Method Not Allowed"
-	uriTooLong           = "HTTP/1.1 414 URI Too Long\nContent-Type: text/plain\nContent-Length: 16\n\n414 URI Too Long"
-	unsupportedMediaType = "HTTP/1.1 415 Unsupported Media Type\nContent-Type: text/plain\nContent-Length: 26\n\n415 Unsupported Media Type"
+	successHTMLTemplate          = "HTTP/1.1 200 OK\nContent-Type: %s\nContent-Length: %d\n\n"
+	badRequestResponse           = "HTTP/1.1 400 Bad Request\nContent-Type: text/plain\nContent-Length: 15\n\n400 Bad Request"
+	notFoundResponse             = "HTTP/1.1 404 Not Found\nContent-Type: text/plain\nContent-Length: 13\n\n404 Not Found"
+	invalidHTTPMethodResponse    = "HTTP/1.1 405 Method Not Allowed\nAllow: GET\nContent-Type: text/plain\nContent-Length: 22\n\n405 Method Not Allowed"
+	uriTooLongResponse           = "HTTP/1.1 414 URI Too Long\nContent-Type: text/plain\nContent-Length: 16\n\n414 URI Too Long"
+	unsupportedMediaTypeResponse = "HTTP/1.1 415 Unsupported Media Type\nContent-Type: text/plain\nContent-Length: 26\n\n415 Unsupported Media Type"
 )
 
 var mimeTypeMap = map[string]string{
@@ -27,15 +27,12 @@ var mimeTypeMap = map[string]string{
 	"js":   "application/javascript",
 }
 
-type Builder interface {
-	Build(string) []byte
+// Builder constructs byte responses to http requests
+type Builder struct {
 }
 
-type ResponseBuilder struct {
-}
-
-// BuildSuccess Builds a successful HTTP response from the given request
-func (ResponseBuilder) BuildSuccess(path string) []byte {
+// BuildSuccess Builds a successful HTTP response from an http request path
+func (Builder) BuildSuccess(path string) []byte {
 
 	fileBytes := getFileBytes(path)
 	tokens := strings.Split(path, ".")
@@ -47,22 +44,22 @@ func (ResponseBuilder) BuildSuccess(path string) []byte {
 	return responseBytes
 }
 
-// BuildError Builds an error HTTP response from the given error code
-func (ResponseBuilder) BuildError(errorCode request.ErrorCode) []byte {
+// BuildError Builds an error HTTP response from the an http error code
+func (Builder) BuildError(errorCode request.ErrorCode) []byte {
 
 	switch errorCode {
 	case request.BadRequest:
-		return []byte(badRequest)
+		return []byte(badRequestResponse)
 	case request.NotFound:
-		return []byte(notFound)
+		return []byte(notFoundResponse)
 	case request.URITooLong:
-		return []byte(uriTooLong)
+		return []byte(uriTooLongResponse)
 	case request.UnsupportedMediaType:
-		return []byte(unsupportedMediaType)
+		return []byte(unsupportedMediaTypeResponse)
 	case request.InvalidHTTPMethod:
-		return []byte(invalidHTTPMethod)
+		return []byte(invalidHTTPMethodResponse)
 	default:
-		return []byte(badRequest)
+		return []byte(badRequestResponse)
 	}
 }
 

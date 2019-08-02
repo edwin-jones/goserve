@@ -10,10 +10,21 @@ import (
 	"os"
 )
 
+// Server a simple http server that serves get requests from the current working directory
+type Server struct {
+	port string
+}
+
+// New Server constructor
+func New(port string) *Server {
+	return &Server{port: port}
+}
+
 // Serve start serving on the given port
-func Serve(port string) string {
+func (server *Server) Serve() string {
 	// Listen for incoming connections.
-	l, err := net.Listen("tcp", "localhost"+":"+port)
+	l, err := net.Listen("tcp", "localhost"+":"+server.port)
+
 	if err != nil {
 		log.Println("Error listening:", err.Error())
 		os.Exit(1)
@@ -22,7 +33,7 @@ func Serve(port string) string {
 	// Close the listener when the application closes.
 	defer l.Close()
 
-	log.Println(fmt.Sprintf("Listening on: %s", port))
+	log.Println(fmt.Sprintf("Listening on: %s", server.port))
 	for {
 		// Listen for an incoming connection.
 		conn, err := l.Accept()
@@ -55,14 +66,16 @@ func handleRequest(conn net.Conn) {
 
 	requestData := string(buffer)
 
-	url, err := request.Parse(requestData)
+	parser := request.Parser{}
 
-	responseBuilder := response.ResponseBuilder{}
+	url, err := parser.Parse(requestData)
+
+	responseBuilder := response.Builder{}
 
 	if err != nil {
 		log.Println(err)
 		response := responseBuilder.BuildError(err.ErrorCode)
-		conn.Write([]byte(response))
+		conn.Write(response)
 		return
 	}
 

@@ -2,10 +2,7 @@ package main
 
 import "github.com/edwin-jones/goserve/server"
 
-const (
-	port = "8080"
-)
-
 func main() {
-	server.Serve(port)
+	server := server.New("8080")
+	server.Serve()
 }

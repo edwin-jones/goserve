@@ -7,9 +7,13 @@ import (
 
 var supportedFileTypes = []string{".html", ".htm", ".jpeg", ".jpg", ".png", ".gif", ".js", ".css"}
 
-// Parse this function parses an http request to get the URI.
+// Parser handles parsing http requests for the relevant path.
+type Parser struct {
+}
+
+// Parse this function parses an http request to get the request path.
 // Returns an error if the supplied http request isn't valid.
-func Parse(rawRequest string) (string, *Error) {
+func (Parser) Parse(rawRequest string) (string, *Error) {
 
 	url := ""
 
