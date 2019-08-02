@@ -23,7 +23,7 @@ type Error struct {
 // newRequestError Constructor for RequestError
 func newError(errorCode ErrorCode) *Error {
 	return &Error{
-		message:   fmt.Sprintf("An invalid http request has been made. Error code %d", errorCode),
+		message:   fmt.Sprintf("An invalid http request has been made: Error code %d", errorCode),
 		ErrorCode: errorCode,
 	}
 }

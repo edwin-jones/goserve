@@ -3,6 +3,7 @@ package response
 import (
 	"fmt"
 	"github.com/edwin-jones/goserve/request"
+	"io"
 	"io/ioutil"
 	"strings"
 )
@@ -32,34 +33,49 @@ type Builder struct {
 }
 
 // BuildSuccess Builds a successful HTTP response from an http request path
-func (Builder) BuildSuccess(path string) []byte {
+func (Builder) BuildSuccess(writer io.Writer, path string) {
 
 	fileBytes := getFileBytes(path)
 	tokens := strings.Split(path, ".")
 	fileType := tokens[len(tokens)-1]
 	mimeType := mimeTypeMap[fileType]
 	response := fmt.Sprintf(successHTMLTemplate, mimeType, len(fileBytes))
-	responseBytes := append([]byte(response), fileBytes...)
 
-	return responseBytes
+	writer.Write([]byte(response))
+	writer.Write(fileBytes)
+
+	var err error
+	_, err = writer.Write([]byte(response))
+
+	_, err = writer.Write(fileBytes)
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 // BuildError Builds an error HTTP response from the an http error code
-func (Builder) BuildError(errorCode request.ErrorCode) []byte {
+func (Builder) BuildError(writer io.Writer, errorCode request.ErrorCode) {
+
+	var err error
 
 	switch errorCode {
 	case request.BadRequest:
-		return []byte(badRequestResponse)
+		_, err = writer.Write([]byte(badRequestResponse))
 	case request.NotFound:
-		return []byte(notFoundResponse)
+		_, err = writer.Write([]byte(notFoundResponse))
 	case request.URITooLong:
-		return []byte(uriTooLongResponse)
+		_, err = writer.Write([]byte(uriTooLongResponse))
 	case request.UnsupportedMediaType:
-		return []byte(unsupportedMediaTypeResponse)
+		_, err = writer.Write([]byte(unsupportedMediaTypeResponse))
 	case request.InvalidHTTPMethod:
-		return []byte(invalidHTTPMethodResponse)
+		_, err = writer.Write([]byte(invalidHTTPMethodResponse))
 	default:
-		return []byte(badRequestResponse)
+		_, err = writer.Write([]byte(badRequestResponse))
+	}
+
+	if err != nil {
+		panic(err)
 	}
 }
 

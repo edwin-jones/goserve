@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/edwin-jones/goserve/request"
 	"github.com/edwin-jones/goserve/response"
@@ -57,28 +58,31 @@ func handleRequest(conn net.Conn) {
 	defer log.Println(fmt.Sprintf("Closed connection %s", connectionID))
 
 	// Make a buffer to hold incoming data.
-	buffer := make([]byte, 1024)
+	requestBuffer := make([]byte, 1024)
 
 	// Read the incoming connection into the buffer.
-	if _, err := conn.Read(buffer); err != nil {
+	if _, err := conn.Read(requestBuffer); err != nil {
 		log.Println("Error reading request stream:", err.Error())
 	}
 
-	requestData := string(buffer)
+	requestData := string(requestBuffer)
 
 	parser := request.Parser{}
 
-	url, err := parser.Parse(requestData)
+	path, err := parser.Parse(requestData)
 
 	responseBuilder := response.Builder{}
 
+	var responseBuffer bytes.Buffer
+
 	if err != nil {
 		log.Println(err)
-		response := responseBuilder.BuildError(err.ErrorCode)
-		conn.Write(response)
+		responseBuilder.BuildError(&responseBuffer, err.ErrorCode)
+		conn.Write(responseBuffer.Bytes())
 		return
 	}
 
 	log.Println("A successful http request has been handled.")
-	conn.Write(responseBuilder.BuildSuccess(url))
+	responseBuilder.BuildSuccess(&responseBuffer, path)
+	conn.Write(responseBuffer.Bytes())
 }
