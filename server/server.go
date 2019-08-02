@@ -2,8 +2,8 @@ package server
 
 import (
 	"fmt"
-	"github.com/edwin-jones/goserve/parser"
-	"github.com/edwin-jones/goserve/responses"
+	"github.com/edwin-jones/goserve/request"
+	"github.com/edwin-jones/goserve/response"
 	"github.com/google/uuid"
 	"log"
 	"net"
@@ -53,16 +53,19 @@ func handleRequest(conn net.Conn) {
 		log.Println("Error reading request stream:", err.Error())
 	}
 
-	request := string(buffer)
+	requestData := string(buffer)
 
-	url, err := parser.Parse(request)
+	url, err := request.Parse(requestData)
+
+	responseBuilder := response.ResponseBuilder{}
 
 	if err != nil {
 		log.Println(err)
-		conn.Write([]byte(err.Response))
+		response := responseBuilder.BuildError(err.ErrorCode)
+		conn.Write([]byte(response))
 		return
 	}
 
 	log.Println("A successful http request has been handled.")
-	conn.Write(responses.Build(url))
+	conn.Write(responseBuilder.BuildSuccess(url))
 }
