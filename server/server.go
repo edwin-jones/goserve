@@ -71,18 +71,20 @@ func handleRequest(conn net.Conn) {
 
 	path, err := parser.Parse(requestData)
 
-	responseBuilder := response.Builder{}
-
 	var responseBuffer bytes.Buffer
+
+	file, _ := os.Open(path)
+
+	res := response.New(&responseBuffer, file)
 
 	if err != nil {
 		log.Println(err)
-		responseBuilder.BuildError(&responseBuffer, err.ErrorCode)
+		res.BuildError(err.ErrorCode)
 		conn.Write(responseBuffer.Bytes())
 		return
 	}
 
 	log.Println("A successful http request has been handled.")
-	responseBuilder.BuildSuccess(&responseBuffer, path)
+	res.BuildSuccess(path)
 	conn.Write(responseBuffer.Bytes())
 }

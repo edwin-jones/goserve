@@ -28,26 +28,30 @@ var mimeTypeMap = map[string]string{
 	"js":   "application/javascript",
 }
 
-// Builder constructs byte responses to http requests
-type Builder struct {
+// Response constructs byte responses to http requests
+type Response struct {
+	writer io.Writer
+	reader io.Reader
+}
+
+// New constructor for response
+func New(writer io.Writer, reader io.Reader) *Response {
+	return &Response{writer: writer, reader: reader}
 }
 
 // BuildSuccess Builds a successful HTTP response from an http request path
-func (Builder) BuildSuccess(writer io.Writer, path string) {
+func (r *Response) BuildSuccess(path string) {
 
-	fileBytes := getFileBytes(path)
+	var err error
+	var fileBytes []byte
+
+	fileBytes, err = ioutil.ReadAll(r.reader)
 	tokens := strings.Split(path, ".")
 	fileType := tokens[len(tokens)-1]
 	mimeType := mimeTypeMap[fileType]
-	response := fmt.Sprintf(successHTMLTemplate, mimeType, len(fileBytes))
 
-	writer.Write([]byte(response))
-	writer.Write(fileBytes)
-
-	var err error
-	_, err = writer.Write([]byte(response))
-
-	_, err = writer.Write(fileBytes)
+	_, err = fmt.Fprintf(r.writer, successHTMLTemplate, mimeType, len(fileBytes))
+	_, err = r.writer.Write(fileBytes)
 
 	if err != nil {
 		panic(err)
@@ -55,35 +59,26 @@ func (Builder) BuildSuccess(writer io.Writer, path string) {
 }
 
 // BuildError Builds an error HTTP response from the an http error code
-func (Builder) BuildError(writer io.Writer, errorCode request.ErrorCode) {
+func (r Response) BuildError(errorCode request.ErrorCode) {
 
 	var err error
 
 	switch errorCode {
 	case request.BadRequest:
-		_, err = writer.Write([]byte(badRequestResponse))
+		_, err = r.writer.Write([]byte(badRequestResponse))
 	case request.NotFound:
-		_, err = writer.Write([]byte(notFoundResponse))
+		_, err = r.writer.Write([]byte(notFoundResponse))
 	case request.URITooLong:
-		_, err = writer.Write([]byte(uriTooLongResponse))
+		_, err = r.writer.Write([]byte(uriTooLongResponse))
 	case request.UnsupportedMediaType:
-		_, err = writer.Write([]byte(unsupportedMediaTypeResponse))
+		_, err = r.writer.Write([]byte(unsupportedMediaTypeResponse))
 	case request.InvalidHTTPMethod:
-		_, err = writer.Write([]byte(invalidHTTPMethodResponse))
+		_, err = r.writer.Write([]byte(invalidHTTPMethodResponse))
 	default:
-		_, err = writer.Write([]byte(badRequestResponse))
+		_, err = r.writer.Write([]byte(badRequestResponse))
 	}
 
 	if err != nil {
 		panic(err)
 	}
-}
-
-func getFileBytes(fileName string) []byte {
-	fileBytes, err := ioutil.ReadFile(fileName) // just pass the file name
-	if err != nil {
-		panic(err)
-	}
-
-	return fileBytes
 }
