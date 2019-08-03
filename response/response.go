@@ -1,10 +1,9 @@
 package response
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/edwin-jones/goserve/request"
-	"io"
-	"io/ioutil"
 	"strings"
 )
 
@@ -28,57 +27,59 @@ var mimeTypeMap = map[string]string{
 	"js":   "application/javascript",
 }
 
-// Response constructs byte responses to http requests
-type Response struct {
-	writer io.Writer
-	reader io.Reader
+type FileReader interface {
+	Read(path string) ([]byte, error)
 }
 
-// New constructor for response
-func New(writer io.Writer, reader io.Reader) *Response {
-	return &Response{writer: writer, reader: reader}
+// Response constructs byte responses to http requests
+type Response struct {
+	fileReader FileReader
+}
+
+func New(fileReader FileReader) *Response {
+	return &Response{fileReader: fileReader}
+}
+
+// Build an http response based on the status code
+func (r Response) Build(StatusCode request.StatusCode, path string) ([]byte, error) {
+
+	var err error
+	var responseBytes []byte
+
+	switch StatusCode {
+	case request.Success:
+		responseBytes, err = r.buildSuccess(path)
+	case request.BadRequest:
+		responseBytes = []byte(badRequestResponse)
+	case request.NotFound:
+		responseBytes = []byte(notFoundResponse)
+	case request.URITooLong:
+		responseBytes = []byte(uriTooLongResponse)
+	case request.UnsupportedMediaType:
+		responseBytes = []byte(unsupportedMediaTypeResponse)
+	case request.InvalidHTTPMethod:
+		responseBytes = []byte(invalidHTTPMethodResponse)
+	default:
+		responseBytes = []byte(badRequestResponse)
+	}
+
+	return responseBytes, err
 }
 
 // BuildSuccess Builds a successful HTTP response from an http request path
-func (r *Response) BuildSuccess(path string) {
+func (r Response) buildSuccess(path string) ([]byte, error) {
 
 	var err error
 	var fileBytes []byte
+	var buffer bytes.Buffer
 
-	fileBytes, err = ioutil.ReadAll(r.reader)
 	tokens := strings.Split(path, ".")
 	fileType := tokens[len(tokens)-1]
 	mimeType := mimeTypeMap[fileType]
+	fileBytes, err = r.fileReader.Read(path)
 
-	_, err = fmt.Fprintf(r.writer, successHTMLTemplate, mimeType, len(fileBytes))
-	_, err = r.writer.Write(fileBytes)
+	_, err = fmt.Fprintf(&buffer, successHTMLTemplate, mimeType, len(fileBytes))
+	_, err = buffer.Write(fileBytes)
 
-	if err != nil {
-		panic(err)
-	}
-}
-
-// BuildError Builds an error HTTP response from the an http error code
-func (r Response) BuildError(errorCode request.ErrorCode) {
-
-	var err error
-
-	switch errorCode {
-	case request.BadRequest:
-		_, err = r.writer.Write([]byte(badRequestResponse))
-	case request.NotFound:
-		_, err = r.writer.Write([]byte(notFoundResponse))
-	case request.URITooLong:
-		_, err = r.writer.Write([]byte(uriTooLongResponse))
-	case request.UnsupportedMediaType:
-		_, err = r.writer.Write([]byte(unsupportedMediaTypeResponse))
-	case request.InvalidHTTPMethod:
-		_, err = r.writer.Write([]byte(invalidHTTPMethodResponse))
-	default:
-		_, err = r.writer.Write([]byte(badRequestResponse))
-	}
-
-	if err != nil {
-		panic(err)
-	}
+	return buffer.Bytes(), err
 }

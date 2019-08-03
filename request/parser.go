@@ -1,58 +1,69 @@
 package request
 
 import (
-	"os"
 	"strings"
 )
 
 var supportedFileTypes = []string{".html", ".htm", ".jpeg", ".jpg", ".png", ".gif", ".js", ".css"}
 
+type FileChecker interface {
+	Exists(path string) bool
+}
+
 // Parser handles parsing http requests for the relevant path.
 type Parser struct {
+	fileChecker FileChecker
+}
+
+// NewParse ctor for parser
+func NewParser(fileChecker FileChecker) *Parser {
+	return &Parser{
+		fileChecker: fileChecker,
+	}
 }
 
 // Parse this function parses an http request to get the request path.
 // Returns an error if the supplied http request isn't valid.
-func (Parser) Parse(rawRequest string) (string, *Error) {
+func (p Parser) Parse(rawRequest string) (string, *Error) {
 
-	url := ""
+	path := ""
 
 	if len(rawRequest) == 0 {
-		return url, newError(BadRequest)
+		return path, newError(BadRequest)
 	}
 
 	tokens := strings.Split(rawRequest, " ")
 	verb := tokens[0]
 
 	if verb != "GET" {
-		return url, newError(InvalidHTTPMethod)
+		return path, newError(InvalidHTTPMethod)
 	}
 
 	if len(tokens) < 2 {
-		return url, newError(BadRequest)
+		return path, newError(BadRequest)
 	}
 
-	url = tokens[1][1:]
+	path = tokens[1][1:]
 
-	if len(url) > 512 {
-		return url, newError(URITooLong)
+	if len(path) > 512 {
+		return path, newError(URITooLong)
 	}
 
-	if !isFileTypeSupported(&url) {
-		return url, newError(UnsupportedMediaType)
+	if !isFileTypeSupported(path) {
+		return path, newError(UnsupportedMediaType)
 	}
 
-	if _, fileError := os.Stat(url); os.IsNotExist(fileError) {
-		return url, newError(NotFound)
+	if !p.fileChecker.Exists(path) {
+		return path, newError(NotFound)
 	}
 
-	return url, nil
+	return path, nil
 }
 
-func isFileTypeSupported(url *string) bool {
+func isFileTypeSupported(path string) bool {
 	var fileTypeSupported = false
 	for _, supportedFileType := range supportedFileTypes {
-		if strings.HasSuffix(*url, supportedFileType) {
+		if strings.HasSuffix(path, supportedFileType) {
 			fileTypeSupported = true
 			break
 		}

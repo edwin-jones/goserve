@@ -2,29 +2,30 @@ package request
 
 import "fmt"
 
-// ErrorCode HTTP error code typedef
-type ErrorCode int
+// StatusCode HTTP status code typedef
+type StatusCode int
 
-// HTTP error codes
+// HTTP status codes
 const (
-	BadRequest           ErrorCode = 400
-	NotFound             ErrorCode = 404
-	InvalidHTTPMethod    ErrorCode = 405
-	URITooLong           ErrorCode = 414
-	UnsupportedMediaType ErrorCode = 415
+	Success              StatusCode = 200
+	BadRequest           StatusCode = 400
+	NotFound             StatusCode = 404
+	InvalidHTTPMethod    StatusCode = 405
+	URITooLong           StatusCode = 414
+	UnsupportedMediaType StatusCode = 415
 )
 
 // Error A representation of an HTTP request error with error response data
 type Error struct {
-	message   string
-	ErrorCode ErrorCode
+	message    string
+	StatusCode StatusCode
 }
 
 // newRequestError Constructor for RequestError
-func newError(errorCode ErrorCode) *Error {
+func newError(StatusCode StatusCode) *Error {
 	return &Error{
-		message:   fmt.Sprintf("An invalid http request has been made: Error code %d", errorCode),
-		ErrorCode: errorCode,
+		message:    fmt.Sprintf("An invalid http request has been made: Status code %d", StatusCode),
+		StatusCode: StatusCode,
 	}
 }
 
