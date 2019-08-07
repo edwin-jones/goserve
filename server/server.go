@@ -2,29 +2,34 @@ package server
 
 import (
 	"fmt"
-	"github.com/edwin-jones/goserve/file"
-	"github.com/edwin-jones/goserve/request"
-	"github.com/edwin-jones/goserve/response"
-	"github.com/google/uuid"
 	"log"
 	"net"
 	"os"
+
+	"github.com/google/uuid"
 )
 
 // Server a simple http server that serves get requests from the current working directory
 type Server struct {
-	port string
+	port            string
+	responseBuilder ResponseBuilder
+}
+
+type ResponseBuilder interface {
+	Build(path string) ([]byte, error)
 }
 
 // New Server constructor
-func New(port string) *Server {
-	return &Server{port: port}
+func New(responseBuilder ResponseBuilder) *Server {
+	return &Server{
+		responseBuilder: responseBuilder,
+	}
 }
 
 // Serve start serving on the given port
-func (server *Server) Serve() string {
+func (s *Server) Serve(port int) string {
 	// Listen for incoming connections.
-	l, err := net.Listen("tcp", "localhost"+":"+server.port)
+	l, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 
 	if err != nil {
 		log.Println("Error listening:", err.Error())
@@ -34,7 +39,7 @@ func (server *Server) Serve() string {
 	// Close the listener when the application closes.
 	defer l.Close()
 
-	log.Println(fmt.Sprintf("Listening on: %s", server.port))
+	log.Println(fmt.Sprintf("Listening on: %d", port))
 	for {
 		// Listen for an incoming connection.
 		conn, err := l.Accept()
@@ -43,12 +48,12 @@ func (server *Server) Serve() string {
 			os.Exit(1)
 		}
 		// Handle connections in a new goroutine.
-		go handleRequest(conn)
+		go s.handleRequest(conn)
 	}
 }
 
 // Handles incoming requests.
-func handleRequest(conn net.Conn) {
+func (s *Server) handleRequest(conn net.Conn) {
 
 	connectionID := uuid.New()
 	log.Println(fmt.Sprintf("Opened connection %s", connectionID))
@@ -67,19 +72,6 @@ func handleRequest(conn net.Conn) {
 	}
 
 	requestData := string(requestBuffer)
-
-	fileHandler := file.Handler{}
-	parser := request.NewParser(fileHandler)
-	path, err := parser.Parse(requestData)
-
-	res := response.New(fileHandler)
-
-	statusCode := request.Success
-	if err != nil {
-		log.Println(err)
-		statusCode = err.StatusCode
-	}
-
-	responseData, _ := res.Build(statusCode, path)
+	responseData, _ := s.responseBuilder.Build(requestData)
 	conn.Write(responseData)
 }

@@ -3,8 +3,9 @@ package response
 import (
 	"bytes"
 	"fmt"
-	"github.com/edwin-jones/goserve/request"
 	"strings"
+
+	"github.com/edwin-jones/goserve/status"
 )
 
 const (
@@ -31,33 +32,42 @@ type FileReader interface {
 	Read(path string) ([]byte, error)
 }
 
-// Response constructs byte responses to http requests
-type Response struct {
-	fileReader FileReader
+type RequestParser interface {
+	Parse(rawRequest string) (string, status.Code)
 }
 
-func New(fileReader FileReader) *Response {
-	return &Response{fileReader: fileReader}
+// Response constructs byte responses to http requests
+type Builder struct {
+	fileReader    FileReader
+	requestParser RequestParser
+}
+
+func NewBuilder(fileReader FileReader, requestParser RequestParser) *Builder {
+	return &Builder{
+		fileReader:    fileReader,
+		requestParser: requestParser,
+	}
 }
 
 // Build an http response based on the status code
-func (r Response) Build(StatusCode request.StatusCode, path string) ([]byte, error) {
+func (b Builder) Build(rawRequest string) ([]byte, error) {
 
-	var err error
+	path, statusCode := b.requestParser.Parse(rawRequest)
 	var responseBytes []byte
+	var err error
 
-	switch StatusCode {
-	case request.Success:
-		responseBytes, err = r.buildSuccess(path)
-	case request.BadRequest:
+	switch statusCode {
+	case status.Success:
+		responseBytes, err = b.buildSuccess(path)
+	case status.BadRequest:
 		responseBytes = []byte(badRequestResponse)
-	case request.NotFound:
+	case status.NotFound:
 		responseBytes = []byte(notFoundResponse)
-	case request.URITooLong:
+	case status.URITooLong:
 		responseBytes = []byte(uriTooLongResponse)
-	case request.UnsupportedMediaType:
+	case status.UnsupportedMediaType:
 		responseBytes = []byte(unsupportedMediaTypeResponse)
-	case request.InvalidHTTPMethod:
+	case status.InvalidHTTPMethod:
 		responseBytes = []byte(invalidHTTPMethodResponse)
 	default:
 		responseBytes = []byte(badRequestResponse)
@@ -67,7 +77,7 @@ func (r Response) Build(StatusCode request.StatusCode, path string) ([]byte, err
 }
 
 // BuildSuccess Builds a successful HTTP response from an http request path
-func (r Response) buildSuccess(path string) ([]byte, error) {
+func (b Builder) buildSuccess(path string) ([]byte, error) {
 
 	var err error
 	var fileBytes []byte
@@ -76,7 +86,7 @@ func (r Response) buildSuccess(path string) ([]byte, error) {
 	tokens := strings.Split(path, ".")
 	fileType := tokens[len(tokens)-1]
 	mimeType := mimeTypeMap[fileType]
-	fileBytes, err = r.fileReader.Read(path)
+	fileBytes, err = b.fileReader.Read(path)
 
 	_, err = fmt.Fprintf(&buffer, successHTMLTemplate, mimeType, len(fileBytes))
 	_, err = buffer.Write(fileBytes)
