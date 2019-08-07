@@ -69,9 +69,13 @@ func TestStatusValidation(t *testing.T) {
 	for _, c := range testCases {
 		fileChecker.exists = c.fileExists
 
-		_, code := parser.Parse([]byte(c.request))
-		if code != c.expectedStatusCode {
-			t.Errorf("Expected status code %d, got %d", c.expectedStatusCode, code)
+		statusCode := status.Success
+		if _, err := parser.Parse([]byte(c.request)); err != nil {
+			statusCode = err.StatusCode
+		}
+
+		if statusCode != c.expectedStatusCode {
+			t.Errorf("Expected status code %d, got %d", c.expectedStatusCode, statusCode)
 		}
 	}
 }

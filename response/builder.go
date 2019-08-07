@@ -3,9 +3,9 @@ package response
 import (
 	"bytes"
 	"fmt"
-	"strings"
-
+	"github.com/edwin-jones/goserve/request"
 	"github.com/edwin-jones/goserve/status"
+	"strings"
 )
 
 const (
@@ -33,15 +33,16 @@ type FileReader interface {
 }
 
 type RequestParser interface {
-	Parse(rawRequest []byte) (string, status.Code)
+	Parse(rawRequest []byte) (string, request.Error)
 }
 
-// Response constructs byte responses to http requests
+// Builder constructs byte responses to http requests
 type Builder struct {
 	fileReader    FileReader
 	requestParser RequestParser
 }
 
+// NewBuilder ctor for Builder
 func NewBuilder(fileReader FileReader, requestParser RequestParser) *Builder {
 	return &Builder{
 		fileReader:    fileReader,
@@ -52,7 +53,13 @@ func NewBuilder(fileReader FileReader, requestParser RequestParser) *Builder {
 // Build an http response based on the status code
 func (b Builder) Build(rawRequest []byte) ([]byte, error) {
 
-	path, statusCode := b.requestParser.Parse(rawRequest)
+	statusCode := status.Success
+	path, requestError := b.requestParser.Parse(rawRequest)
+
+	if false {
+		statusCode = requestError.StatusCode
+	}
+
 	var responseBytes []byte
 	var err error
 
