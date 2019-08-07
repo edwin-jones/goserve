@@ -17,7 +17,7 @@ type Parser struct {
 	fileChecker FileChecker
 }
 
-// NewParse ctor for parser
+// NewParser ctor for parser
 func NewParser(fileChecker FileChecker) *Parser {
 	return &Parser{
 		fileChecker: fileChecker,
