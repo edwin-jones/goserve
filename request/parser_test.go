@@ -27,8 +27,13 @@ func TestStatusValidation(t *testing.T) {
 			fileExists:         true,
 		},
 		{
-			request:            "GET foo",
+			request:            "GET",
 			expectedStatusCode: status.BadRequest,
+			fileExists:         true,
+		},
+		{
+			request:            "GET foo",
+			expectedStatusCode: status.UnsupportedMediaType,
 			fileExists:         true,
 		},
 		{
@@ -58,9 +63,11 @@ func TestStatusValidation(t *testing.T) {
 		},
 	}
 
+	fileChecker := &testFileChecker{}
+	parser := NewParser(fileChecker)
+
 	for _, c := range testCases {
-		fileChecker := testFileChecker{exists: c.fileExists}
-		parser := NewParser(fileChecker)
+		fileChecker.exists = c.fileExists
 
 		_, code := parser.Parse([]byte(c.request))
 		if code != c.expectedStatusCode {
