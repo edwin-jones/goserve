@@ -16,7 +16,7 @@ type Server struct {
 }
 
 type ResponseBuilder interface {
-	Build(path string) ([]byte, error)
+	Build(rawRequest []byte) ([]byte, error)
 }
 
 // New Server constructor
@@ -63,15 +63,20 @@ func (s *Server) handleRequest(conn net.Conn) {
 	defer conn.Close()
 
 	// Make a buffer to hold incoming data.
-	requestBuffer := make([]byte, 1024)
+	rawRequest := make([]byte, 1024)
 
 	// Read the incoming connection into the buffer.
-	if _, err := conn.Read(requestBuffer); err != nil {
+	if _, err := conn.Read(rawRequest); err != nil {
 		log.Println("Error reading request stream:", err.Error())
 		return
 	}
 
-	requestData := string(requestBuffer)
-	responseData, _ := s.responseBuilder.Build(requestData)
+	responseData, err := s.responseBuilder.Build(rawRequest)
+
+	if err != nil {
+		log.Println("Error building response:", err.Error())
+		return
+	}
+
 	conn.Write(responseData)
 }

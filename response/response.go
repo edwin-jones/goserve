@@ -33,7 +33,7 @@ type FileReader interface {
 }
 
 type RequestParser interface {
-	Parse(rawRequest string) (string, status.Code)
+	Parse(rawRequest []byte) (string, status.Code)
 }
 
 // Response constructs byte responses to http requests
@@ -50,7 +50,7 @@ func NewBuilder(fileReader FileReader, requestParser RequestParser) *Builder {
 }
 
 // Build an http response based on the status code
-func (b Builder) Build(rawRequest string) ([]byte, error) {
+func (b Builder) Build(rawRequest []byte) ([]byte, error) {
 
 	path, statusCode := b.requestParser.Parse(rawRequest)
 	var responseBytes []byte

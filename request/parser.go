@@ -26,15 +26,16 @@ func NewParser(fileChecker FileChecker) *Parser {
 
 // Parse this function parses an http request to get the request path.
 // Returns an error if the supplied http request isn't valid.
-func (p Parser) Parse(rawRequest string) (string, status.Code) {
+func (p Parser) Parse(rawRequest []byte) (string, status.Code) {
 
 	path := ""
+	requestData := string(rawRequest)
 
 	if len(rawRequest) == 0 {
 		return path, status.BadRequest
 	}
 
-	tokens := strings.Split(rawRequest, " ")
+	tokens := strings.Split(requestData, " ")
 	verb := tokens[0]
 
 	if verb != "GET" {
