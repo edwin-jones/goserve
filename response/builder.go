@@ -3,9 +3,10 @@ package response
 import (
 	"bytes"
 	"fmt"
+	"strings"
+
 	"github.com/edwin-jones/goserve/request"
 	"github.com/edwin-jones/goserve/status"
-	"strings"
 )
 
 const (
@@ -33,7 +34,7 @@ type FileReader interface {
 }
 
 type RequestParser interface {
-	Parse(rawRequest []byte) (string, request.Error)
+	Parse(rawRequest []byte) (string, *request.Error)
 }
 
 // Builder constructs byte responses to http requests
