@@ -57,7 +57,7 @@ func (b Builder) Build(rawRequest []byte) ([]byte, error) {
 	statusCode := status.Success
 	path, requestError := b.requestParser.Parse(rawRequest)
 
-	if false {
+	if requestError != nil {
 		statusCode = requestError.StatusCode
 	}
 
