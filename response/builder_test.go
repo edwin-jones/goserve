@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/edwin-jones/goserve/request"
+	"github.com/edwin-jones/goserve/status"
 )
 
 type testFileReader struct{}
@@ -13,21 +14,13 @@ func (testFileReader) Read(path string) ([]byte, error) {
 	return []byte("some test text"), nil
 }
 
-type testRequestParser struct{}
-
-func (testRequestParser) Parse(rawRequest []byte) (request.Data, *request.Error) {
-	return request.Data{}, nil
-}
-
 func TestResponseCanBeBuilt(t *testing.T) {
 
 	fileReader := &testFileReader{}
-	requestParser := &testRequestParser{}
-	testRequestBytes := []byte("GET test.txt HTTP/1.1")
 
-	Builder := NewBuilder(fileReader, requestParser)
+	Builder := NewBuilder(fileReader)
 
-	responseData, err := Builder.Build(testRequestBytes)
+	responseData, err := Builder.Build(request.Data{}, status.Success)
 
 	if err != nil {
 		t.Errorf("Expected response to be built successfully but got error %s", err.Error())
