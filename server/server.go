@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -56,10 +57,10 @@ func (s *Server) Serve(port int) string {
 func (s *Server) handleRequest(conn net.Conn) {
 
 	connectionID := uuid.New()
-	log.Println(fmt.Sprintf("Opened connection %s", connectionID))
+	log.Println(fmt.Sprintf("Connection %s opened", connectionID))
 
 	// Close the connection last
-	defer log.Println(fmt.Sprintf("Closed connection %s", connectionID))
+	defer log.Println(fmt.Sprintf("Connection %s closed", connectionID))
 	defer conn.Close()
 
 	// Make a buffer to hold incoming data.
@@ -70,6 +71,10 @@ func (s *Server) handleRequest(conn net.Conn) {
 		log.Println("Error reading request stream:", err.Error())
 		return
 	}
+
+	requestString := string(rawRequest)
+	requestedUri := strings.Split(requestString, "\n")[0]
+	log.Println(fmt.Sprintf("Connection %s is requesting: %s", connectionID, requestedUri))
 
 	responseData, err := s.responseBuilder.Build(rawRequest)
 
