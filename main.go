@@ -10,8 +10,8 @@ import (
 func main() {
 	fileHandler := file.Handler{}
 	requestParser := request.NewParser(fileHandler)
-	responseBuilder := response.NewBuilder(fileHandler, requestParser)
+	responseBuilder := response.NewBuilder(fileHandler)
 
-	server := server.New(responseBuilder)
+	server := server.New(requestParser, responseBuilder)
 	server.Serve(8080)
 }

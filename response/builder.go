@@ -3,7 +3,6 @@ package response
 import (
 	"bytes"
 	"fmt"
-	"strings"
 
 	"github.com/edwin-jones/goserve/request"
 	"github.com/edwin-jones/goserve/status"
@@ -34,39 +33,30 @@ type FileReader interface {
 }
 
 type RequestParser interface {
-	Parse(rawRequest []byte) (string, *request.Error)
+	Parse(rawRequest []byte) (request.Data, *request.Error)
 }
 
 // Builder constructs byte responses to http requests
 type Builder struct {
-	fileReader    FileReader
-	requestParser RequestParser
+	fileReader FileReader
 }
 
 // NewBuilder ctor for Builder
-func NewBuilder(fileReader FileReader, requestParser RequestParser) *Builder {
+func NewBuilder(fileReader FileReader) *Builder {
 	return &Builder{
-		fileReader:    fileReader,
-		requestParser: requestParser,
+		fileReader: fileReader,
 	}
 }
 
 // Build an http response based on the status code
-func (b Builder) Build(rawRequest []byte) ([]byte, error) {
-
-	statusCode := status.Success
-	path, requestError := b.requestParser.Parse(rawRequest)
-
-	if requestError != nil {
-		statusCode = requestError.StatusCode
-	}
+func (b Builder) Build(data request.Data, statusCode status.Code) ([]byte, error) {
 
 	var responseBytes []byte
 	var err error
 
 	switch statusCode {
 	case status.Success:
-		responseBytes, err = b.buildSuccess(path)
+		responseBytes, err = b.buildSuccess(data)
 	case status.BadRequest:
 		responseBytes = []byte(badRequestResponse)
 	case status.NotFound:
@@ -85,16 +75,14 @@ func (b Builder) Build(rawRequest []byte) ([]byte, error) {
 }
 
 // BuildSuccess Builds a successful HTTP response from an http request path
-func (b Builder) buildSuccess(path string) ([]byte, error) {
+func (b Builder) buildSuccess(data request.Data) ([]byte, error) {
 
 	var err error
 	var fileBytes []byte
 	var buffer bytes.Buffer
 
-	tokens := strings.Split(path, ".")
-	fileType := tokens[len(tokens)-1]
-	mimeType := mimeTypeMap[fileType]
-	fileBytes, err = b.fileReader.Read(path)
+	mimeType := mimeTypeMap[data.FileType]
+	fileBytes, err = b.fileReader.Read(data.Path)
 
 	_, err = fmt.Fprintf(&buffer, successHTMLTemplate, mimeType, len(fileBytes))
 	_, err = buffer.Write(fileBytes)

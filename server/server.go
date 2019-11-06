@@ -5,24 +5,31 @@ import (
 	"log"
 	"net"
 	"os"
-	"strings"
 
+	"github.com/edwin-jones/goserve/request"
+	"github.com/edwin-jones/goserve/status"
 	"github.com/google/uuid"
 )
 
 // Server a simple http server that serves get requests from the current working directory
 type Server struct {
 	port            string
+	requestParser   RequestParser
 	responseBuilder ResponseBuilder
 }
 
 type ResponseBuilder interface {
-	Build(rawRequest []byte) ([]byte, error)
+	Build(data request.Data, statusCode status.Code) ([]byte, error)
+}
+
+type RequestParser interface {
+	Parse(rawRequest []byte) (request.Data, *request.Error)
 }
 
 // New Server constructor
-func New(responseBuilder ResponseBuilder) *Server {
+func New(requestParser RequestParser, responseBuilder ResponseBuilder) *Server {
 	return &Server{
+		requestParser:   requestParser,
 		responseBuilder: responseBuilder,
 	}
 }
@@ -67,21 +74,27 @@ func (s *Server) handleRequest(conn net.Conn) {
 	rawRequest := make([]byte, 1024)
 
 	// Read the incoming connection into the buffer.
-	if _, err := conn.Read(rawRequest); err != nil {
-		log.Println("Error reading request stream:", err.Error())
+	if _, streamError := conn.Read(rawRequest); streamError != nil {
+		log.Println(fmt.Sprintf("Connection %s %s", connectionID, streamError.Error()))
 		return
 	}
 
-	requestString := string(rawRequest)
-	requestedUri := strings.Split(requestString, "\n")[0]
-	log.Println(fmt.Sprintf("Connection %s is requesting: %s", connectionID, requestedUri))
+	data, requestErr := s.requestParser.Parse(rawRequest)
 
-	responseData, err := s.responseBuilder.Build(rawRequest)
+	statusCode := status.Success
 
-	if err != nil {
-		log.Println("Error building response:", err.Error())
+	if requestErr != nil {
+		statusCode = requestErr.StatusCode
+	}
+
+	responseData, responseErr := s.responseBuilder.Build(data, statusCode)
+
+	if responseErr != nil {
+		log.Println(fmt.Sprintf("Connection %s %s", connectionID, responseErr.Error()))
 		return
 	}
 
 	conn.Write(responseData)
+
+	log.Println(fmt.Sprintf("Connection %s %s %d %s", connectionID, data.Verb, statusCode, data.Path))
 }

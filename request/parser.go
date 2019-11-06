@@ -6,7 +6,7 @@ import (
 	"github.com/edwin-jones/goserve/status"
 )
 
-var supportedFileTypes = []string{".html", ".htm", ".jpeg", ".jpg", ".png", ".gif", ".js", ".css"}
+var supportedFileTypes = []string{".html", ".htm", ".jpeg", ".jpg", ".png", ".gif", ".js", ".css", ".txt"}
 
 // FileChecker interface to fine "file exists" operations
 type FileChecker interface {
@@ -27,41 +27,43 @@ func NewParser(fileChecker FileChecker) *Parser {
 
 // Parse this function parses an http request to get the request path.
 // Returns an error if the supplied http request isn't valid.
-func (p Parser) Parse(rawRequest []byte) (string, *Error) {
+func (p Parser) Parse(rawRequest []byte) (Data, *Error) {
 
-	path := ""
+	data := Data{}
 	requestData := string(rawRequest)
 
 	if len(rawRequest) == 0 {
-		return path, newError(status.BadRequest)
+		return data, newError(status.BadRequest)
 	}
 
 	tokens := strings.Split(requestData, " ")
-	verb := tokens[0]
+	data.Verb = tokens[0]
 
-	if verb != "GET" {
-		return path, newError(status.InvalidHTTPMethod)
+	if data.Verb != "GET" {
+		return data, newError(status.InvalidHTTPMethod)
 	}
 
 	if len(tokens) < 2 {
-		return path, newError(status.BadRequest)
+		return data, newError(status.BadRequest)
 	}
 
-	path = tokens[1][1:]
+	data.Path = tokens[1][1:]
 
-	if len(path) > 512 {
-		return path, newError(status.URITooLong)
+	if len(data.Path) > 512 {
+		return data, newError(status.URITooLong)
 	}
 
-	if !isFileTypeSupported(path) {
-		return path, newError(status.UnsupportedMediaType)
+	if !isFileTypeSupported(data.Path) {
+		return data, newError(status.UnsupportedMediaType)
 	}
 
-	if !p.fileChecker.Exists(path) {
-		return path, newError(status.NotFound)
+	if !p.fileChecker.Exists(data.Path) {
+		return data, newError(status.NotFound)
 	}
 
-	return path, nil
+	data.FileType = tokens[len(tokens)-1]
+
+	return data, nil
 }
 
 func isFileTypeSupported(path string) bool {

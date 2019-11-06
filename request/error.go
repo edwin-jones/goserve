@@ -2,6 +2,7 @@ package request
 
 import (
 	"fmt"
+
 	"github.com/edwin-jones/goserve/status"
 )
 
@@ -14,7 +15,7 @@ type Error struct {
 // newRequestError Constructor for RequestError
 func newError(StatusCode status.Code) *Error {
 	return &Error{
-		message:    fmt.Sprintf("An invalid http request has been made: Status code %d", StatusCode),
+		message:    fmt.Sprintf("error %d", StatusCode),
 		StatusCode: StatusCode,
 	}
 }

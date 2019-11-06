@@ -1,8 +1,9 @@
 package response
 
 import (
-	"testing"
 	"strings"
+	"testing"
+
 	"github.com/edwin-jones/goserve/request"
 )
 
@@ -14,8 +15,8 @@ func (testFileReader) Read(path string) ([]byte, error) {
 
 type testRequestParser struct{}
 
-func (testRequestParser) Parse(rawRequest []byte) (string, *request.Error) {
-	return "data", nil
+func (testRequestParser) Parse(rawRequest []byte) (request.Data, *request.Error) {
+	return request.Data{}, nil
 }
 
 func TestResponseCanBeBuilt(t *testing.T) {
