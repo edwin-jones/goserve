@@ -40,14 +40,14 @@ func (s *Server) Serve(port int) string {
 	l, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 
 	if err != nil {
-		log.Println("Error listening:", err.Error())
+		log.Println("Error starting server: ", err.Error())
 		os.Exit(1)
 	}
 
 	// Close the listener when the application closes.
 	defer l.Close()
 
-	log.Println(fmt.Sprintf("Listening on: %d", port))
+	log.Println(fmt.Sprintf("Server started listening on port %d", port))
 	for {
 		// Listen for an incoming connection.
 		conn, err := l.Accept()

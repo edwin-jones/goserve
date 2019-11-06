@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/edwin-jones/goserve/file"
 	"github.com/edwin-jones/goserve/request"
 	"github.com/edwin-jones/goserve/response"
@@ -8,10 +10,15 @@ import (
 )
 
 func main() {
+
+	var port int
+	flag.IntVar(&port, "p", 8080, "the port to run the http server on")
+	flag.Parse()
+
 	fileHandler := file.Handler{}
 	requestParser := request.NewParser(fileHandler)
 	responseBuilder := response.NewBuilder(fileHandler)
 
 	server := server.New(requestParser, responseBuilder)
-	server.Serve(8080)
+	server.Serve(port)
 }
