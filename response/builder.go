@@ -49,7 +49,7 @@ func NewBuilder(fileReader FileReader) *Builder {
 }
 
 // Build an http response based on the status code
-func (b Builder) Build(data request.Data, statusCode status.Code) ([]byte, error) {
+func (b Builder) Build(data *request.Data, statusCode status.Code) ([]byte, error) {
 
 	var responseBytes []byte
 	var err error
@@ -75,7 +75,7 @@ func (b Builder) Build(data request.Data, statusCode status.Code) ([]byte, error
 }
 
 // BuildSuccess Builds a successful HTTP response from an http request path
-func (b Builder) buildSuccess(data request.Data) ([]byte, error) {
+func (b Builder) buildSuccess(data *request.Data) ([]byte, error) {
 
 	var err error
 	var fileBytes []byte

@@ -19,11 +19,11 @@ type Server struct {
 }
 
 type ResponseBuilder interface {
-	Build(data request.Data, statusCode status.Code) ([]byte, error)
+	Build(data *request.Data, statusCode status.Code) ([]byte, error)
 }
 
 type RequestParser interface {
-	Parse(rawRequest []byte) (request.Data, *request.Error)
+	Parse(rawRequest []byte) (*request.Data, *request.Error)
 }
 
 // New Server constructor
